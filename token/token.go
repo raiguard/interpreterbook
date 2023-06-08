@@ -10,9 +10,8 @@ type Token struct {
 const (
 	ILLEGAL = "ILLEGAL"
 	EOF     = "EOF"
-	// Keywords
-	IDENT = "IDENT"
-	INT   = "INT"
+	IDENT   = "IDENT"
+	INT     = "INT"
 	// Operators
 	ASSIGN   = "="
 	PLUS     = "+"

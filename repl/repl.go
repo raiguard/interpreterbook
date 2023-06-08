@@ -1,30 +1,46 @@
 package repl
 
 import (
-	"bufio"
 	"fmt"
 	"interpreterbook/lexer"
+	"interpreterbook/parser"
 	"interpreterbook/token"
 	"io"
+	"os"
+
+	"github.com/chzyer/readline"
 )
 
 const PROMPT = ">> "
 
 func Start(in io.Reader, out io.Writer) {
-	scanner := bufio.NewScanner(in)
+	rl, err := readline.New("> ")
+	if err != nil {
+		panic(err)
+	}
+	defer rl.Close()
 
 	for {
-		fmt.Fprintf(out, PROMPT)
-		scanned := scanner.Scan()
-		if !scanned {
-			return
+		line, err := rl.Readline()
+		if err != nil {
+			break
 		}
 
-		line := scanner.Text()
 		l := lexer.New(line)
 
 		for tok := l.NextToken(); tok.Type != token.EOF; tok = l.NextToken() {
 			fmt.Fprintf(out, "%+v\n", tok)
 		}
+
+		l = lexer.New(line)
+		p := parser.New(l)
+		program := p.ParseProgram()
+		for _, err := range p.Errors() {
+			fmt.Fprintln(os.Stderr, err)
+		}
+		if len(p.Errors()) > 0 {
+			continue
+		}
+		fmt.Println(program.String())
 	}
 }
