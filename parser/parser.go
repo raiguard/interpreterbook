@@ -46,6 +46,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerInfix(token.MINUS, p.parseInfixExpression)
 	p.registerInfix(token.SLASH, p.parseInfixExpression)
 	p.registerInfix(token.ASTERISK, p.parseInfixExpression)
+	p.registerInfix(token.LPAREN, p.parseCallExpression)
 
 	// Populate curToken and peekToken
 	p.nextToken()
@@ -271,13 +272,13 @@ func (p *Parser) parseIfExpression() ast.Expression {
 }
 
 func (p *Parser) parseFnExpression() ast.Expression {
-	fn := &ast.FnExpression{Token: p.curToken, Arguments: []ast.Expression{}}
+	fn := &ast.FnExpression{Token: p.curToken, Parameters: []ast.Expression{}}
 	if !p.expectPeek(token.LPAREN) {
 		return nil
 	}
 	for p.peekTokenIs(token.IDENT) {
 		p.nextToken()
-		fn.Arguments = append(fn.Arguments, p.parseIdentifier())
+		fn.Parameters = append(fn.Parameters, p.parseIdentifier())
 		if p.peekTokenIs(token.COMMA) {
 			p.nextToken()
 		}
@@ -307,6 +308,34 @@ func (p *Parser) parseInfixExpression(left ast.Expression) ast.Expression {
 	return expression
 }
 
+func (p *Parser) parseCallExpression(left ast.Expression) ast.Expression {
+	call := &ast.CallExpression{
+		Token:     p.curToken,
+		Ident:     left,
+		Arguments: []ast.Expression{},
+	}
+
+	if p.peekTokenIs(token.RPAREN) {
+		p.nextToken()
+		return call
+	}
+
+	p.nextToken()
+	call.Arguments = append(call.Arguments, p.parseExpression(LOWEST))
+
+	for p.peekTokenIs(token.COMMA) {
+		p.nextToken()
+		p.nextToken()
+		call.Arguments = append(call.Arguments, p.parseExpression(LOWEST))
+	}
+
+	if !p.expectPeek(token.RPAREN) {
+		return nil
+	}
+
+	return call
+}
+
 type operatorPrecedence int
 
 const (
@@ -329,10 +358,7 @@ var precedences = map[token.TokenType]operatorPrecedence{
 	token.MINUS:    SUM,
 	token.SLASH:    PRODUCT,
 	token.ASTERISK: PRODUCT,
-	token.LPAREN:   LOWEST,
-	token.RPAREN:   LOWEST,
-	token.LBRACE:   LOWEST,
-	token.RBRACE:   LOWEST,
+	token.LPAREN:   CALL,
 }
 
 func (p *Parser) peekPrecedence() operatorPrecedence {

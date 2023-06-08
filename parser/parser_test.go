@@ -277,10 +277,34 @@ func TestFnExpression(t *testing.T) {
 	expr, ok := stmt.Expression.(*ast.FnExpression)
 	assert.True(t, ok)
 
-	assert.Equal(t, 2, len(expr.Arguments))
-	assert.Equal(t, "x", expr.Arguments[0].String())
-	assert.Equal(t, "y", expr.Arguments[1].String())
+	assert.Equal(t, 2, len(expr.Parameters))
+	assert.Equal(t, "x", expr.Parameters[0].String())
+	assert.Equal(t, "y", expr.Parameters[1].String())
 	assert.Equal(t, "{ return (x + y); }", expr.Body.String())
+}
+
+func TestCallExpression(t *testing.T) {
+	input := "name(param1, param2, param3 + param4)"
+
+	l := lexer.New(input)
+	p := New(l)
+	program := p.ParseProgram()
+	checkParserErrors(t, p)
+
+	assert.Equal(t, 1, len(program.Statements))
+
+	stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+	assert.True(t, ok)
+
+	expr, ok := stmt.Expression.(*ast.CallExpression)
+	assert.True(t, ok)
+
+	assert.Equal(t, "name", expr.Ident.String())
+
+	assert.Equal(t, 3, len(expr.Arguments))
+	assert.Equal(t, "param1", expr.Arguments[0].String())
+	assert.Equal(t, "param2", expr.Arguments[1].String())
+	assert.Equal(t, "(param3 + param4)", expr.Arguments[2].String())
 }
 
 func checkParserErrors(t *testing.T, p *Parser) {

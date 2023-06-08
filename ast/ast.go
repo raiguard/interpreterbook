@@ -181,17 +181,33 @@ func (ie *IfExpression) String() string {
 }
 
 type FnExpression struct {
-	Token     token.Token
-	Arguments []Expression
-	Body      BlockStatement
+	Token      token.Token
+	Parameters []Expression
+	Body       BlockStatement
 }
 
 func (fe *FnExpression) expressionNode()      {}
 func (fe *FnExpression) TokenLiteral() string { return fe.Token.Literal }
 func (fe *FnExpression) String() string {
 	args := []string{}
-	for _, a := range fe.Arguments {
+	for _, a := range fe.Parameters {
 		args = append(args, a.String())
 	}
 	return fmt.Sprintf("fn(%s) %s", strings.Join(args, ", "), fe.Body.String())
+}
+
+type CallExpression struct {
+	Token     token.Token
+	Ident     Expression
+	Arguments []Expression
+}
+
+func (ce *CallExpression) expressionNode()      {}
+func (ce *CallExpression) TokenLiteral() string { return ce.Token.Literal }
+func (ce *CallExpression) String() string {
+	args := []string{}
+	for _, a := range ce.Arguments {
+		args = append(args, a.String())
+	}
+	return fmt.Sprintf("%s(%s)", ce.Ident.String(), strings.Join(args, ", "))
 }
