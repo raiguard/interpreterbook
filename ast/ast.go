@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"interpreterbook/token"
+	"strings"
 )
 
 type Program struct {
@@ -177,4 +178,20 @@ func (ie *IfExpression) String() string {
 		return fmt.Sprintf("if %s %s else %s", ie.Condition.String(), ie.Consequence.String(), ie.Alternative.String())
 	}
 	return fmt.Sprintf("if %s %s", ie.Condition.String(), ie.Consequence.String())
+}
+
+type FnExpression struct {
+	Token     token.Token
+	Arguments []Expression
+	Body      BlockStatement
+}
+
+func (fe *FnExpression) expressionNode()      {}
+func (fe *FnExpression) TokenLiteral() string { return fe.Token.Literal }
+func (fe *FnExpression) String() string {
+	args := []string{}
+	for _, a := range fe.Arguments {
+		args = append(args, a.String())
+	}
+	return fmt.Sprintf("fn(%s) %s", strings.Join(args, ", "), fe.Body.String())
 }

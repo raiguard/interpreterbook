@@ -261,6 +261,28 @@ func TestIfExpression(t *testing.T) {
 	assert.Equal(t, "{ false }", expr.Alternative.String())
 }
 
+func TestFnExpression(t *testing.T) {
+	input := "fn(x, y) { return x + y; }"
+
+	l := lexer.New(input)
+	p := New(l)
+	program := p.ParseProgram()
+	checkParserErrors(t, p)
+
+	assert.Equal(t, 1, len(program.Statements))
+
+	stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+	assert.True(t, ok)
+
+	expr, ok := stmt.Expression.(*ast.FnExpression)
+	assert.True(t, ok)
+
+	assert.Equal(t, 2, len(expr.Arguments))
+	assert.Equal(t, "x", expr.Arguments[0].String())
+	assert.Equal(t, "y", expr.Arguments[1].String())
+	assert.Equal(t, "{ return (x + y); }", expr.Body.String())
+}
+
 func checkParserErrors(t *testing.T, p *Parser) {
 	errors := p.Errors()
 	if len(errors) == 0 {
